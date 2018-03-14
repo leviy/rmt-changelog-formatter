@@ -7,6 +7,7 @@ prerequisites:
 pre-release-actions:
   changelog-update:
     format: pullRequest
+    file: CHANGELOG.md
     repo: leviy/rmt-changelog-formatter
 
 version-generator: semantic
