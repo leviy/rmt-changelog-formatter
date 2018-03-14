@@ -1,0 +1,17 @@
+{
+    "name": "leviy/rmt-changelog-formatter",
+    "description": "A custom changelog formatter for liip/rmt that lists merged pull requests",
+    "type": "library",
+    "require": {
+        "php": "^7.1",
+        "liip/rmt": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Liip\\RMT\\Changelog\\Formatter\\": "src/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
