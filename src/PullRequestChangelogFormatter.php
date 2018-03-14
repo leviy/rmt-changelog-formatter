@@ -5,6 +5,7 @@ namespace Liip\RMT\Changelog\Formatter;
 
 use Liip\RMT\Context;
 use Liip\RMT\Exception;
+use Liip\RMT\Exception\NoReleaseFoundException;
 use Liip\RMT\Version\Persister\VcsTagPersister;
 use RuntimeException;
 use function array_keys;
@@ -77,7 +78,7 @@ final class PullRequestChangelogFormatter
         }
     }
 
-    public function updateExistingLines(array $lines, string $version, string $comment, array $options): array
+    public function updateExistingLines(array $current, string $version, string $comment, array $options): array
     {
         // automatically set default URLs for GitHub repositories
         if (isset($options['repo'])) {
@@ -92,7 +93,11 @@ final class PullRequestChangelogFormatter
         $this->issuePattern = $options['issue-pattern'] ?? $this->issuePattern;
         $this->issueUrl = $options['issue-url'] ?? $this->issueUrl;
 
-        $currentTag = $this->versionPersister->getCurrentVersionTag();
+        try {
+            $currentTag = $this->versionPersister->getCurrentVersionTag();
+        } catch (NoReleaseFoundException $exception) {
+            $currentTag = null;
+        }
 
         $changes = array_map(
             function (array $pullRequest): string {
@@ -106,17 +111,23 @@ final class PullRequestChangelogFormatter
             $this->getMergedPullRequestsSince($currentTag)
         );
 
-        $compareUrl = $this->getVersionCompareUrl($version, $currentTag);
-
-        return array_merge(
+        $output = array_merge(
             self::HEADER,
             [sprintf('## [%s] - %s', $version, date('Y-m-d'))],
             $changes,
             [''],
-            $this->getCurrentBody($lines),
-            [sprintf('[%s]: %s', $version, $compareUrl)],
-            ['']
+            $this->getCurrentBody($current)
         );
+
+        if ($currentTag !== null) {
+            $compareUrl = $this->getVersionCompareUrl($version, $currentTag);
+            $output[] = sprintf('[%s]: %s', $version, $compareUrl);
+        }
+
+        // end the file with a blank line
+        $output[] = '';
+
+        return $output;
     }
 
     private function getPullRequestUrl(string $id): string
@@ -131,13 +142,19 @@ final class PullRequestChangelogFormatter
         return preg_replace($pattern, '[$0](' . $this->issueUrl . ')', $title);
     }
 
-    private function getMergedPullRequestsSince(string $oldTag): array
+    private function getMergedPullRequestsSince(?string $oldTag): array
     {
+        if ($oldTag === null) {
+            $range = 'HEAD';
+        } else {
+            $range = $oldTag . '..HEAD';
+        }
+
         $command = implode(
             ' ',
             [
                 'log',
-                $oldTag . '..HEAD',
+                $range,
                 '--grep="' . $this->pullRequestPattern . '"',
                 '--extended-regexp',
                 '--format="%s%b"',
