@@ -9,6 +9,7 @@ pre-release-actions:
     format: pullRequest
     file: CHANGELOG.md
     repo: leviy/rmt-changelog-formatter
+  vcs-commit: ~
 
 version-generator: semantic
 
