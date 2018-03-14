@@ -208,7 +208,9 @@ final class PullRequestChangelogFormatter
 
     private function getCurrentBody(array $lines): array
     {
-        $releaseHeaders = preg_grep('/^## \[/', $lines);
+        $pattern = '/^## .+ - [0-9]{4}-[0-9]{2}-[0-9]{2}/';
+
+        $releaseHeaders = preg_grep($pattern, $lines);
         $releaseHeaderLineNumbers = array_keys($releaseHeaders);
         $offset = reset($releaseHeaderLineNumbers);
 
