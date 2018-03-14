@@ -1,0 +1,20 @@
+vcs: git
+
+prerequisites:
+  - working-copy-check
+  - display-last-changes
+
+pre-release-actions:
+  changelog-update:
+    format: pullRequest
+    repo: leviy/rmt-changelog-formatter
+
+version-generator: semantic
+
+version-persister:
+  vcs-tag:
+    tag-prefix: 'v'
+
+post-release-actions:
+  vcs-publish:
+    ask-confirmation: true
