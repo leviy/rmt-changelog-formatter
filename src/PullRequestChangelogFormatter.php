@@ -111,9 +111,15 @@ final class PullRequestChangelogFormatter
             $this->getMergedPullRequestsSince($currentTag)
         );
 
+        if ($currentTag !== null) {
+            $versionTitle = sprintf('## [%s] - %s', $version, date('Y-m-d'));
+        } else {
+            $versionTitle = sprintf('## %s - %s', $version, date('Y-m-d'));
+        }
+
         $output = array_merge(
             self::HEADER,
-            [sprintf('## [%s] - %s', $version, date('Y-m-d'))],
+            [$versionTitle],
             $changes,
             [''],
             $this->getCurrentBody($current)
