@@ -1,4 +1,4 @@
-# Rull request changelog formatter
+# Pull request changelog formatter
 
 This changelog formatter for [RMT](https://github.com/liip/RMT) allows you to
 automatically generate and update a changelog based on merged pull requests.
