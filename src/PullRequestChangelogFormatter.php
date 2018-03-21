@@ -156,6 +156,8 @@ final class PullRequestChangelogFormatter
             $range = $oldTag . '..HEAD';
         }
 
+        // Note: \x1F (ASCII unit delimiter character) is used as separator
+        // between the commit title and commit body
         $command = implode(
             ' ',
             [
@@ -163,26 +165,29 @@ final class PullRequestChangelogFormatter
                 $range,
                 '--grep="' . $this->pullRequestPattern . '"',
                 '--extended-regexp',
-                '--format="%s%b"',
+                '--format="%s%x1F%b"',
             ]
         );
 
-        $mergedPullRequests = $this->executeGitCommand($command);
+        $output = $this->executeGitCommand($command);
 
         $phpPattern = '/' . $this->pullRequestPattern . '/';
 
-        $mergedPullRequests = preg_grep($phpPattern, $mergedPullRequests);
+        // Limit to lines that match the pull request pattern to filter out extra lines of the body
+        $commits = preg_grep($phpPattern, $output);
 
         return array_map(
-            function (string $commitLine) use ($phpPattern): array {
-                preg_match($phpPattern, $commitLine, $matches);
+            function (string $commit) use ($phpPattern): array {
+                [$title, $firstLineOfBody] = explode("\x1F", $commit);
+
+                preg_match($phpPattern, $title, $matches);
 
                 return [
                     'number' => $matches[1],
-                    'title' => str_replace($matches[0], '', $commitLine),
+                    'title' => $firstLineOfBody,
                 ];
             },
-            $mergedPullRequests
+            $commits
         );
     }
 
